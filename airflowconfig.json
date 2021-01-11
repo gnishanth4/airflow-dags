@@ -1,0 +1,90 @@
+{
+        "region_name": "eu-central-1",
+	"awslogs_region": "eu-central-1",
+	"platform_version": "1.4.0",
+        "ec2": [{
+		"virtual_scenario_building_task":{
+                        "instance_id":"i-0408c41e782f0e893"
+                },
+		"vnv_ipg_sil_execution_task":{
+			"instance_id":"i-0a0da29078e3a3f1e"
+		}
+	}],
+	"lambda": [{
+		"metadata_extraction_lambda_task":{
+			"function_name":"vv-iac-ingest-extract-metadata-export-lambda",
+			"invocation_type":"RequestResponse",
+		        "group_name_logs":"/aws/lambda/vv-iac-ingest-extract-metadata-export-lambda"
+	}}],
+	"batch": [{
+		"autolabel_batch_task":{
+		        "job_definition":"vv-iac-autolabel-mock-job-definition",
+			"job_queue":"vv-iac-autolabel-mock-batch-q",
+			"log_group_name":"/aws/batch/job"
+	}}],
+	"ecs": [{
+		"automatic_labeler_ecs_task": {
+			"container_name": "vnv-annotation-mock",
+			"task_definition": "vnv-annotation1-mock:1",
+			"cluster": "vnv-airflow",
+			"command": [
+				"python","/src/video-to-img.py"
+			],
+			"launch_type": "FARGATE",
+			"awslogs_group": "/ecs/vnv-annotation1-mock",
+			"awslogs_stream_prefix": "ecs/vnv-annotation-mock",
+			"SECURITY_GROUP_ID": "sg-0602ff273190b3183",
+			"SUBNET_ID": "subnet-3fdf1d43"
+		},
+		"extract_high_level_parameters_ecs_task": {
+			"container_name": "hlp-mock",
+			"task_definition": "hlp-airflow-mock:1",
+			"cluster": "vnv-airflow",
+			"command": [
+				"python", "/src/program.py"
+			],
+			"launch_type": "FARGATE",
+			"awslogs_group": "/ecs/hlp-airflow-mock",
+			"awslogs_stream_prefix": "ecs/hlp-mock",
+			"SECURITY_GROUP_ID": "sg-08bd25efb60d29d0e",
+			"SUBNET_ID": "subnet-3fdf1d43"
+		},
+		"validation_plan_definintion_ecs_task": {
+			"container_name": "vpdfast",
+			"task_definition": "vpdfast",
+			"cluster": "vnv-airflow",
+			"command": [
+				"python3","/src/define_validation_plan.py","--bucket=vnv-airflow-e2e","--ftd=SysEng/Functions_flow_table_definition.xlsx","--tc=SysEng/Test_Cases.xlsx","--outbucket=vpd/output"
+			],
+			"launch_type": "FARGATE",
+			"awslogs_group": "/ecs/vpdfast",
+			"awslogs_stream_prefix": "ecs/vpdfast",
+			"SECURITY_GROUP_ID": "sg-09f3838f27e240fec",
+			"SUBNET_ID": "subnet-3fdf1d43"
+		},
+		"justification_plan_definintion_ecs_task": {
+			"container_name": "jfg21oct",
+			"task_definition": "vnv-justification-file-generation-oct",
+			"cluster": "vnv-airflow",
+			"command": [
+				"python3","/Justification_File/main.py","-srb=vnv-airflow-e2e","-sro=SysEng/Safety_Requirements.xlsx","-htb=vnv-airflow-e2e","-hto=SysEng/template.yaml","-hfb=vnv-airflow-e2e","-hfo=JFG/output","-sib=vnv-airflow-e2e","-sio=SysEng/System_of_interest_description.xlsx","-sifb=vnv-airflow-e2e","-sifo=SysEng/System_of_Interest_functions_description.xlsx","-arb=vnv-airflow-e2e","-aro=SysEng/architecture.jpg","-sadb=vnv-airflow-e2e","-sado=SysEng/System_Applicable_Documents.xlsx","-gb=vnv-airflow-e2e","-go=SysEng/Glossary.xlsx"
+			],
+			"launch_type": "FARGATE",
+			"awslogs_group": "/ecs/vnv-justification-file-generation-oct",
+			"awslogs_stream_prefix": "ecs/jfg21oct",
+			"SECURITY_GROUP_ID": "sg-0ef9e419c3f726045",
+			"SUBNET_ID": "subnet-3fdf1d43"
+		},
+		"database_analysis_tool_ecs_task": {
+			"container_name": "dbtool1",
+			"task_definition": "vnv-dbtool-airflow:4",
+			"cluster": "vnv-airflow",
+			"command": ["python3","/database_Analysis_tool/main.py","-kpb=vnv-airflow","-kbo=DBAT/output/kpi.xlsx"],
+			"launch_type": "FARGATE",
+			"awslogs_group": "/ecs/vnv-dbtool-airflow",
+			"awslogs_stream_prefix": "ecs/dbtool1",
+			"SECURITY_GROUP_ID": "sg-0ef9e419c3f726045",
+			"SUBNET_ID": "subnet-3fdf1d43"
+		}
+	}]
+}
